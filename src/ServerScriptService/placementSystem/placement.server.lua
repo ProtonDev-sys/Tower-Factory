@@ -88,12 +88,15 @@ local function handleCollision(object, plot)
         local collisionPoint = object.PrimaryPart.Touched:Connect(function() end)
         local collisionPoints = object.PrimaryPart:GetTouchingParts()
         
+		
+
         local objectMinVector, objectMaxVector = getBoundingBox(object)
         local checkedModels = {}
         local tolerance = 0.1
+
         for _, part in ipairs(collisionPoints) do
             local parentModel = part.Parent
-            if not part:IsDescendantOf(object) and parentModel:IsDescendantOf(plot.itemHolder) and parentModel.ClassName == 'Model' then
+            if not part:IsDescendantOf(object) and parentModel:IsDescendantOf(plot.itemHolder) and parentModel.ClassName == "Model" then
                 if not checkedModels[parentModel] then
                     checkedModels[parentModel] = true
 
@@ -105,11 +108,21 @@ local function handleCollision(object, plot)
                 end
             end
         end
+        
+		for _,part in next, plot.Parent.Path:GetChildren() do
+
+			local secondObjectMinVector, secondObjectMaxVector = getBoundingBoxPart(part)
+			if doBoundingBoxesIntersect(objectMinVector, objectMaxVector, secondObjectMinVector, secondObjectMaxVector, tolerance) then
+				collided = true
+				break
+			end
+		end
 
         collisionPoint:Disconnect()
         return collided
     end
 end
+
 
 local function bounds(object, plot)
     local min1,max1 = getBoundingBox(object)

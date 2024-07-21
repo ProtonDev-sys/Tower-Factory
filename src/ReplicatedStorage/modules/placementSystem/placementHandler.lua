@@ -44,6 +44,7 @@ local rotatedValue = false
 local collided = nil
 
 local function renderGrid()
+	if plot:FindFirstChild("Texture") then return end
 	local texture = Instance.new("Texture")
 	texture.StudsPerTileU = GRID_SIZE
 	texture.StudsPerTileV = GRID_SIZE
@@ -62,6 +63,42 @@ local function changeHitboxColor()
 		end
 	end
 end
+
+local function getBoundingBoxPart(part)
+    local minVector = Vector3.new(math.huge, math.huge, math.huge)
+	local maxVector = Vector3.new(-math.huge, -math.huge, -math.huge)
+
+    local cf = part.CFrame
+    local size = part.Size
+    local halfSize = size / 2
+
+    local corners = {
+        cf * Vector3.new(-halfSize.X, -halfSize.Y, -halfSize.Z),
+        cf * Vector3.new(-halfSize.X, -halfSize.Y,  halfSize.Z),
+        cf * Vector3.new(-halfSize.X,  halfSize.Y, -halfSize.Z),
+        cf * Vector3.new(-halfSize.X,  halfSize.Y,  halfSize.Z),
+        cf * Vector3.new( halfSize.X, -halfSize.Y, -halfSize.Z),
+        cf * Vector3.new( halfSize.X, -halfSize.Y,  halfSize.Z),
+        cf * Vector3.new( halfSize.X,  halfSize.Y, -halfSize.Z),
+        cf * Vector3.new( halfSize.X,  halfSize.Y,  halfSize.Z)
+    }
+
+    for _, corner in ipairs(corners) do
+        minVector = Vector3.new(
+            math.min(minVector.X, corner.X),
+            math.min(minVector.Y, corner.Y),
+            math.min(minVector.Z, corner.Z)
+        )
+
+        maxVector = Vector3.new(
+            math.max(maxVector.X, corner.X),
+            math.max(maxVector.Y, corner.Y),
+            math.max(maxVector.Z, corner.Z)
+        )
+    end
+    return minVector, maxVector
+end
+
 
 local function getBoundingBox(model)
 	local minVector = Vector3.new(math.huge, math.huge, math.huge)
@@ -117,13 +154,15 @@ local function handleCollision()
         local collisionPoint = object.PrimaryPart.Touched:Connect(function() end)
         local collisionPoints = object.PrimaryPart:GetTouchingParts()
         
+		
+
         local objectMinVector, objectMaxVector = getBoundingBox(object)
         local checkedModels = {}
         local tolerance = 0.1
 
         for _, part in ipairs(collisionPoints) do
             local parentModel = part.Parent
-            if not part:IsDescendantOf(object) and parentModel:IsDescendantOf(plot.itemHolder) and parentModel.ClassName == 'Model' then
+            if not part:IsDescendantOf(object) and parentModel:IsDescendantOf(plot.itemHolder) and parentModel.ClassName == "Model" then
                 if not checkedModels[parentModel] then
                     checkedModels[parentModel] = true
 
@@ -136,6 +175,15 @@ local function handleCollision()
             end
         end
         
+		for _,part in next, plot.Parent.Path:GetChildren() do
+
+			local secondObjectMinVector, secondObjectMaxVector = getBoundingBoxPart(part)
+			if doBoundingBoxesIntersect(objectMinVector, objectMaxVector, secondObjectMinVector, secondObjectMaxVector, tolerance) then
+				collided = true
+				break
+			end
+		end
+
         collisionPoint:Disconnect()
         return collided
     end
@@ -280,8 +328,7 @@ function placement.new(gridSize, objects, placementMode, rotateKey, terminateKey
 end
 
 function placement:activate(id, placedobjs, plt, stack) -- name, placedObjects, plot, stackable
-	if plt:FindFirstChild("Texture") then
-		plt.Texture:Destroy()
+	if object then
 		object:Destroy()
 	end
 	object = ITEM_LOCATION[id]:Clone()
