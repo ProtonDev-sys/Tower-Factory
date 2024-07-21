@@ -18,10 +18,7 @@ local placing = false
 
 
 button.MouseButton1Click:Connect(function()
-	if not placing then
-		placing = true
-		placement:activate("crate", workspace.Map.Part.itemHolder, workspace.Map.Part, false)
-	end
+	placement:activate("crate", workspace.Map.Part.itemHolder, workspace.Map.Part, false)
 end)
 
 local m = game.Players.LocalPlayer:GetMouse()

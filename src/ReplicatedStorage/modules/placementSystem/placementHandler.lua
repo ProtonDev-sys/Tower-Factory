@@ -170,6 +170,16 @@ local function rotate(actionName, inputState, inputObj)
 	end
 end
 
+local function cancelPlacement(actionName, inputState, inputObj)
+	if inputState == Enum.UserInputState.Begin then
+		object:Destroy()
+		if plot:FindFirstChild("Texture") then
+			plot.Texture:Destroy()
+		end
+		mouse.TargetFilter = nil
+	end
+end
+
 local function snap(c)
 	local newX = math.round(c.X/GRID_SIZE) * GRID_SIZE
 	local newZ = math.round(c.Z/GRID_SIZE) * GRID_SIZE	
@@ -215,10 +225,12 @@ end
 
 local function bindInputs()
 	contextActionService:BindAction("Rotate", rotate, false, ROTATE_KEY)
+	contextActionService:BindAction("CancelPlacement", cancelPlacement, false, TERIMAMTE_KEY)
 end
 
 local function unbindInputs()
 	contextActionService:UnbindAction("Rotate")
+	contextActionService:UnbindAction("CancelPlacement")
 end
 
 local function translateObject()
@@ -268,7 +280,11 @@ function placement.new(gridSize, objects, placementMode, rotateKey, terminateKey
 end
 
 function placement:activate(id, placedobjs, plt, stack) -- name, placedObjects, plot, stackable
-	object = ITEM_LOCATION[id]
+	if plt:FindFirstChild("Texture") then
+		plt.Texture:Destroy()
+		object:Destroy()
+	end
+	object = ITEM_LOCATION[id]:Clone()
 	for _,v in next, object:GetDescendants() do
 		if v:IsA("BasePart") then
 			v.CanCollide = false

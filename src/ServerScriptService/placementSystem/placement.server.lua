@@ -122,7 +122,16 @@ local function bounds(object, plot)
     return intersect
 end
 
+local function correctCframe(cframe)
+    local x,y,z = cframe.Position.X, cframe.Position.Y, cframe.Position.Z
+    return math.round((x*100))%10 == 0 and math.round((z*100))%10 == 0
+end
+
 local function place(player, id, placedObjects, cframe, plot)
+    if not correctCframe(cframe) then
+        player:Kick("Illegal placement")
+        return
+    end
     local item = replicatedStorage.placeableItems[id]:Clone()
     item:PivotTo(cframe)
     item.PrimaryPart.CanCollide = false
