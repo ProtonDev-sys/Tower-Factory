@@ -87,9 +87,6 @@ local function handleCollision(object, plot)
         local collided = false
         local collisionPoint = object.PrimaryPart.Touched:Connect(function() end)
         local collisionPoints = object.PrimaryPart:GetTouchingParts()
-        
-		
-
         local objectMinVector, objectMaxVector = getBoundingBox(object)
         local checkedModels = {}
         local tolerance = 0.1

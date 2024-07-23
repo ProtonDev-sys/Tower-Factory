@@ -43,7 +43,7 @@ local bad_position = {}
 local path = {}
 local visited = {}
 local depth = 0
-local GRID_SPACING = 2
+local GRID_SPACING = 4
 
 local function shuffle(tabl)
     for i=1,#tabl-1 do
@@ -107,35 +107,59 @@ local function isValidMove(gridSize, newPosition, visited)
     return true
 end
 
-local function dfs(gridSize, currentPosition, exit, visited, path)
+function randomiseDict(originalDict)
+	local cloneDictionary = {}
+	local newDictionary	= {}
+	
+	for _, v in pairs(originalDict) do
+		table.insert(cloneDictionary, v)
+	end
+	for i, v in pairs(originalDict) do
+		local Index = math.random(1, #cloneDictionary)
+		
+		newDictionary[i] = cloneDictionary[Index]
+		table.remove(cloneDictionary, Index)
+	end
+	
+	return newDictionary
+end
+
+local function dfs(gridSize, currentPosition, exit, visited, path, lastDirection, timesLastDirectionRepeated)
+    if not timesLastDirectionRepeated then
+        timesLastDirectionRepeated = 1
+    end
     if currentPosition == exit then
         table.insert(path, currentPosition)
         return true
     end
-    
+
     table.insert(visited, currentPosition)
     table.insert(path, currentPosition)
     
     -- Randomize the directions to ensure a random path
     local directions = {
-        Vector2.new(currentPosition.X+1, currentPosition.Y), 
-        Vector2.new(currentPosition.X, currentPosition.Y-1), 
-        Vector2.new(currentPosition.X, currentPosition.Y+1),
-        Vector2.new(currentPosition.X-1, currentPosition.Y)
+        ["A"] = Vector2.new(currentPosition.X+1, currentPosition.Y),
+        ["B"] = Vector2.new(currentPosition.X, currentPosition.Y-1),
+        ["C"] = Vector2.new(currentPosition.X, currentPosition.Y+1),
+        ["D"] = Vector2.new(currentPosition.X-1, currentPosition.Y)
     }
 
-    for i = #directions, 2, -1 do
-        local j = math.random(i)
-        directions[i], directions[j] = directions[j], directions[i]
+    directions = randomiseDict(directions)
+
+    if lastDirection and math.random(1,100) <= 100-timesLastDirectionRepeated and isValidMove(gridSize, directions[lastDirection], visited) then
+        local tmp = directions
+        directions = {
+            [lastDirection] = tmp[lastDirection]
+        }
     end
-    
-    for _, newPosition in pairs(directions) do
+
+    for key, newPosition in next, directions do
         if isValidMove(gridSize, newPosition, visited) then
             -- Ensure the new position is not directly adjacent to more than one part of the path
             local adjacents = {
-                Vector2.new(newPosition.X-1, newPosition.Y), 
-                Vector2.new(newPosition.X+1, newPosition.Y), 
-                Vector2.new(newPosition.X, newPosition.Y-1), 
+                Vector2.new(newPosition.X-1, newPosition.Y),
+                Vector2.new(newPosition.X+1, newPosition.Y),
+                Vector2.new(newPosition.X, newPosition.Y-1),
                 Vector2.new(newPosition.X, newPosition.Y+1)
             }
             local adjacentCount = 0
@@ -148,13 +172,13 @@ local function dfs(gridSize, currentPosition, exit, visited, path)
             end
             
             if adjacentCount <= 1 then
-                if dfs(gridSize, newPosition, exit, visited, path) then
+                if dfs(gridSize, newPosition, exit, visited, path, key, key == lastDirection and timesLastDirectionRepeated+1 or 1) then
                     return true
                 end
             end
         end
     end
-    
+
     -- Backtrack
     table.remove(path)
     table.remove(visited)
@@ -197,9 +221,10 @@ local function visualizePath(waypoints, track, pathType)
         end
         
         pathPart.Parent = track.Parent.Path
-        pathPart.Size = Vector3.new(GRID_SPACING,0.1,GRID_SPACING) 
+        pathPart.Size = Vector3.new(GRID_SPACING,0.2,GRID_SPACING) 
         pathPart.Position = convertedVector
         pathPart.Anchored = true
+        pathPart.Name = i
     end
 end
 
@@ -208,8 +233,14 @@ function pathHandler:CreateTrack(track, pathType)
     visited = {}
     path = {}
     didntWork = {}
-    dfs(gridSize, Vector2.new(math.random(1,gridSize-1),0), Vector2.new(math.random(1,gridSize-1), gridSize-1), visited, path)
-
+    while #path == 0 do
+        dfs(gridSize, Vector2.new(math.random(1,gridSize-1),0), Vector2.new(math.random(1,gridSize-1), gridSize-1), visited, path)
+        if #path == 0 then
+            visited = {}
+            didntWork = {}
+        end
+        task.wait()
+    end
     print(path)
     print(visited)
     visualizePath(path, track, pathType)
