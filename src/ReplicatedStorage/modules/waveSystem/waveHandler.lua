@@ -5,39 +5,48 @@ local waveHandler = {}
 waveHandler.enemies = {}
 
 function waveHandler:moveEnemies()
-    local to_remove = {}
-
-    for index, enemy in next, self.enemies do
-        warn(enemy)
+    for index = #self.enemies, 1, -1 do
+        local enemy = self.enemies[index]
+    
         local currentPath = workspace.Map.Path[tostring(enemy.path)]
         local nextPath = workspace.Map.Path[tostring(enemy.path + 1)]
-        local direction = (nextPath.Position - currentPath.Position).Unit
-        local targetDistance = (nextPath.Position - currentPath.Position).Magnitude
-        local currentDistance = (nextPath.Position - enemy.model.PrimaryPart.Position).Magnitude
+        task.spawn(function()
+            while true do
+                if not enemy.model or not enemy.model.PrimaryPart then
+                    break
+                end
+                local direction = (nextPath.Position - currentPath.Position).Unit
+                local enemyPosition = enemy.model.PrimaryPart.Position
 
-        -- Calculate the velocity needed to move towards the next path point
-        local velocity = direction * enemy.movementSpeed
-        enemy.model.PrimaryPart.Force.Velocity = velocity
+                local velocity = direction * enemy.movementSpeed
+                local step = velocity * (game:GetService("RunService").Heartbeat:Wait())
+                local newEnemyPosition = enemyPosition + step
 
-        -- Check if the enemy is close enough to the next path point to consider it reached
-        if currentDistance < math.max(enemy.movementSpeed * 0.1, .8) then
-            if enemy.path >= #workspace.Map.Path:GetChildren() - 1 then
-                enemy.model:Destroy()
-                table.insert(to_remove, index)
-                break
+                local toCurrent = newEnemyPosition - currentPath.Position
+                local toNext = nextPath.Position - currentPath.Position
+                local projection = toCurrent:Dot(toNext.Unit)
+
+                if projection > toNext.Magnitude then
+                    enemy.model.PrimaryPart.Position = nextPath.Position
+                    if enemy.path >= #workspace.Map.Path:GetChildren() - 1 then
+                        enemy.model:Destroy()
+                        table.remove(self.enemies, index)
+                        break
+                    end
+                    
+                    enemy.path += 1
+                    currentPath = workspace.Map.Path[tostring(enemy.path)]
+                    nextPath = workspace.Map.Path[tostring(enemy.path + 1)]
+                else
+                    if not enemy.model.PrimaryPart or not nextPath then
+                        break
+                    end
+                    enemy.model.PrimaryPart.Position = newEnemyPosition
+                    enemy.model.PrimaryPart.Velocity = velocity
+                    break
+                end
             end
-
-            enemy.path += 1
-        else
-            enemy.model.PrimaryPart.Velocity = velocity
-        end
-
-        enemy.distanceMagnitude = currentDistance
-    end
-
-    -- Clean up removed enemies
-    for _, v in next, to_remove do
-        table.remove(self.enemies, v)
+        end)
     end
 end
 
@@ -48,9 +57,22 @@ function waveHandler:tick()
     self.moveEnemies(self)
 end
 
+local function deepCopy(original)
+    local copy = {}
+    for key, value in pairs(original) do
+        if type(value) == "table" then
+            copy[key] = deepCopy(value)
+        else
+            copy[key] = value
+        end
+    end
+    return copy
+end
+
+
 function waveHandler:sendEnemy(enemy)
     local map = workspace.Map
-    local newEnemey = enemies[enemy]
+    local newEnemey = deepCopy(enemies[enemy])
     local model = enemies[enemy].model:Clone()
     model.Parent = map.Enemies
     model.PrimaryPart.CFrame = map.Path["1"].CFrame

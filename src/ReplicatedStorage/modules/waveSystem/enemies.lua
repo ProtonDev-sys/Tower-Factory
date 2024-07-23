@@ -11,7 +11,7 @@ local enemies = {
             return
         end,
         ["abilityTime"] = 5,
-        ["movementSpeed"] = 10,
+        ["movementSpeed"] = 200,
         ["flying"] = false,
         ["model"] = enemies.test,
         ["boss"] = false
