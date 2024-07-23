@@ -2,13 +2,18 @@ local players = game:GetService("Players")
 local localPlayer = players.LocalPlayer
 local screenGui = localPlayer:WaitForChild("PlayerGui")
 local testing = screenGui:WaitForChild("testing")
-local button = testing:WaitForChild("TextButton")
-
+local testPlacingButton = testing:WaitForChild("TextButton")
+local testPathButton = testing:WaitForChild("TextButton2")
 local module = require(game.ReplicatedStorage.modules.placementSystem.placementHandler)
+
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local remotes = replicatedStorage.remotes
+local development = remotes.development
+local resetPath = development.resetPath
 
 local placement = module.new(
 	2,
-	game.ReplicatedStorage.placeableItems,
+	replicatedStorage.placeableItems,
 	Enum.KeyCode.B,
 	Enum.KeyCode.R,
 	Enum.KeyCode.B
@@ -17,8 +22,12 @@ local placement = module.new(
 local placing = false
 
 
-button.MouseButton1Click:Connect(function()
+testPlacingButton.MouseButton1Click:Connect(function()
 	placement:activate("crate", workspace.Map.Part.itemHolder, workspace.Map.Part, false)
+end)
+
+testPathButton.MouseButton1Click:Connect(function()
+	resetPath:FireServer()
 end)
 
 local m = game.Players.LocalPlayer:GetMouse()
