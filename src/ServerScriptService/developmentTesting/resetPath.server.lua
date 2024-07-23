@@ -26,5 +26,16 @@ development.resetPath.onServerEvent:Connect(function(plr)
     pathHandler:CreateTrack(workspace.Map.Part, "Default")
 end)
 
+local waveHandler = require(modules.waveSystem.waveHandler)
+
+task.spawn(function()
+    while task.wait() do
+        waveHandler:tick()
+    end
+end)
+
+development.spawnEnemy.onServerEvent:Connect(function(plr)
+    waveHandler:sendEnemy("test")
+end)
 
 
