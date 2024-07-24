@@ -4,6 +4,7 @@ local development = remotes.development
 
 local modules = replicatedStorage.modules
 local pathHandler = require(modules.pathingSystem.pathHandler)
+local networkingService = require(replicatedStorage.modules.networkService.networkHandler)
 
 local WHITELISTED_USERS = {
     4693178461
@@ -18,7 +19,7 @@ local function canUseDevelopmentRemotes(userid)
     return false
 end
 
-development.resetPath.onServerEvent:Connect(function(plr)
+networkingService:registerEvent("RemoteEvent", "resetPath", function(plr)
     if not canUseDevelopmentRemotes(plr.UserId) then
         plr:Kick()
     end
@@ -35,10 +36,16 @@ task.spawn(function()
 end)
 
 function waveHandler:enemyReachEnd(enemy)
-    warn("hello from testing server script ", enemy)
+    replicatedStorage.inGameStats.towerHealth.Value -= enemy.health
+    if replicatedStorage.inGameStats.towerHealth.Value <= 0 then
+        warn("dead.")
+    end
 end
 
-development.spawnEnemy.onServerEvent:Connect(function(plr)
+networkingService:registerEvent("RemoteEvent", "spawnEnemy", function(plr)
+    if not canUseDevelopmentRemotes(plr.UserId) then
+        plr:Kick()
+    end
     waveHandler:sendWave(1)
 end)
 

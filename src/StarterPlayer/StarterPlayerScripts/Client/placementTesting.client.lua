@@ -1,4 +1,5 @@
 local players = game:GetService("Players")
+local runService = game:GetService("RunService")
 local localPlayer = players.LocalPlayer
 local screenGui = localPlayer:WaitForChild("PlayerGui")
 local testing = screenGui:WaitForChild("testing")
@@ -9,6 +10,7 @@ local testSpawnEnemyButton = testing:WaitForChild("TextButton3")
 local module = require(game.ReplicatedStorage.modules.placementSystem.placementHandler)
 
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local networkingService = require(replicatedStorage.modules.networkService.networkHandler)
 local remotes = replicatedStorage.remotes
 local development = remotes.development
 local resetPath = development.resetPath
@@ -29,15 +31,22 @@ testPlacingButton.MouseButton1Click:Connect(function()
 	placement:activate("crate", workspace.Map.Part.itemHolder, workspace.Map.Part, false)
 end)
 
-testPathButton.MouseButton1Click:Connect(function()
-	resetPath:FireServer()
-end)
-
-testSpawnEnemyButton.MouseButton1Click:Connect(function()
-	spawnEnemy:FireServer()
-end)
 
 local m = game.Players.LocalPlayer:GetMouse()
 m.Button1Down:Connect(function()
 	placement:place(game.ReplicatedStorage.remotes.placementSystem.place)
+end)
+
+testPathButton.MouseButton1Click:Connect(function()
+	local remote = networkingService:getEvent("resetPath")
+	remote:FireServer()
+end)
+
+testSpawnEnemyButton.MouseButton1Click:Connect(function()
+	local remote = networkingService:getEvent("spawnEnemy")
+	remote:FireServer()
+end)
+
+runService.RenderStepped:Connect(function()
+	testing.healthLabel.Text = "Health: "..tostring(replicatedStorage.inGameStats.towerHealth.Value)
 end)
