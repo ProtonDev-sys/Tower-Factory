@@ -28,8 +28,9 @@ function waveHandler:moveEnemies()
                 local projection = toCurrent:Dot(toNext.Unit)
 
                 if projection > toNext.Magnitude then
-                    enemy.model.PrimaryPart.Position = nextPath.Position
+                    enemy.model.PrimaryPart.Position = Vector3.new(nextPath.Position.X, enemy.model.PrimaryPart.Position.Y, nextPath.Position.Z)
                     if enemy.path >= #workspace.Map.Path:GetChildren() - 1 then
+                        self:enemyReachEnd(self.enemies[index])
                         enemy.model:Destroy()
                         table.remove(self.enemies, index)
                         break
@@ -44,7 +45,7 @@ function waveHandler:moveEnemies()
                     end
                     newEnemyPosition = Vector3.new(newEnemyPosition.X, enemy.model.PrimaryPart.Position.Y, newEnemyPosition.Z)
                     enemy.model.PrimaryPart.Position = newEnemyPosition
-                    enemy.model.PrimaryPart.Velocity = velocity
+                    enemy.model.PrimaryPart.Force.Velocity = velocity
                     break
                 end
             end
@@ -57,6 +58,10 @@ function waveHandler:tick()
         v.ticksExisted += 1
     end
     self.moveEnemies(self)
+end
+
+function waveHandler:enemyReachEnd(enemy)
+    return
 end
 
 local function deepCopy(original)
@@ -111,10 +116,12 @@ end
 function waveHandler:sendEnemy(enemy)
     local map = workspace.Map
     local newEnemey = deepCopy(enemies[enemy])
+
     local model = enemies[enemy].model:Clone()
     model.Parent = map.Enemies
     model.PrimaryPart.CFrame = map.Path["1"].CFrame + Vector3.new(0,1,0)
     model.PrimaryPart.Anchored = false
+    
     local force = Instance.new("BodyVelocity")
     force.Parent = model.PrimaryPart
     force.Name = "Force"
@@ -126,7 +133,6 @@ function waveHandler:sendEnemy(enemy)
     newEnemey.model = model
     newEnemey.ticksExisted = 0
     newEnemey.path = 1
-    newEnemey.distanceMagnitude = math.huge
     table.insert(self.enemies, newEnemey)
 end
 

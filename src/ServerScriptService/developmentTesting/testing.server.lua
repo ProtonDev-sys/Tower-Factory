@@ -34,6 +34,10 @@ task.spawn(function()
     end
 end)
 
+function waveHandler:enemyReachEnd(enemy)
+    warn("hello from testing server script ", enemy)
+end
+
 development.spawnEnemy.onServerEvent:Connect(function(plr)
     waveHandler:sendWave(1)
 end)
