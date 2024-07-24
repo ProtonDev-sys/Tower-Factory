@@ -35,7 +35,7 @@ task.spawn(function()
 end)
 
 development.spawnEnemy.onServerEvent:Connect(function(plr)
-    waveHandler:sendEnemy("test")
+    waveHandler:sendWave(1)
 end)
 
 

@@ -1,4 +1,5 @@
 local enemies = require(script.Parent.enemies)
+local waves = require(script.Parent.waves)
 
 local waveHandler = {}
 
@@ -41,6 +42,7 @@ function waveHandler:moveEnemies()
                     if not enemy.model.PrimaryPart or not nextPath then
                         break
                     end
+                    newEnemyPosition = Vector3.new(newEnemyPosition.X, enemy.model.PrimaryPart.Position.Y, newEnemyPosition.Z)
                     enemy.model.PrimaryPart.Position = newEnemyPosition
                     enemy.model.PrimaryPart.Velocity = velocity
                     break
@@ -69,13 +71,49 @@ local function deepCopy(original)
     return copy
 end
 
+function waveHandler:sendWave(waveNumber)
+    task.spawn(function() -- we want this to happen in the background so that other tasks can continue too.
+        local startTick = tick() * 1000
+        local toSend = {}
+        local sending = {}
+        for _,v in next, waves[waveNumber] do
+            table.insert(toSend, v)
+        end
+        while true do
+            local cleanup = {}
+            for tickRequired,enemyArray in next, toSend do
+                if not sending[tickRequired] and (tick() * 1000) - startTick >= tickRequired then
+                    sending[tickRequired] = true
+                    task.spawn(function(enemyArray) -- spawn all the enemy with correct spacing set.
+                        local spacing = enemyArray.spacing
+                        local amount = enemyArray.amount
+                        local id = enemyArray.id
+                        local lastTick = startTick
+                        while amount >= 0 do
+                            local currentTick = tick() * 1000
+                            if (currentTick-lastTick) >= spacing then
+                                amount -= 1
+                                lastTick = currentTick
+                                self:sendEnemy(id)
+                            else
+                                task.wait()
+                            end
+                        end
+                        table.insert(cleanup, tickRequired)
+                    end, enemyArray)
+                end
+            end
+            task.wait()
+        end
+    end)
+end
 
 function waveHandler:sendEnemy(enemy)
     local map = workspace.Map
     local newEnemey = deepCopy(enemies[enemy])
     local model = enemies[enemy].model:Clone()
     model.Parent = map.Enemies
-    model.PrimaryPart.CFrame = map.Path["1"].CFrame
+    model.PrimaryPart.CFrame = map.Path["1"].CFrame + Vector3.new(0,1,0)
     model.PrimaryPart.Anchored = false
     local force = Instance.new("BodyVelocity")
     force.Parent = model.PrimaryPart
