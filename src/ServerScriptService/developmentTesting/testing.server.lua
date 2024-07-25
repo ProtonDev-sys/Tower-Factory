@@ -66,7 +66,18 @@ RunService.Heartbeat:Connect(function()
     for _,tower in next, workspace.Map.Part.itemHolder:GetChildren() do
         for _,enemy in next, waveHandler.enemies do
             if (enemy.model.PrimaryPart.Position - tower.PrimaryPart.Position).Magnitude <= towers[tower.Name].range then
-                if (not towercoolDowns[tower]) or ((tick() - towercoolDowns[tower])*1000 > towers[tower.Name].cooldown) then
+                if (not towercoolDowns[tower]) or ((tick() - towercoolDowns[tower])*1000 > towers[tower.Name].cooldown) and enemy.health > 0 then
+                    local laser = replicatedStorage.holder.laser:Clone()
+                    laser.Anchored = true
+                    local distance = (tower.PrimaryPart.Position - enemy.model.PrimaryPart.Position).Magnitude
+                    laser.CFrame = CFrame.new(tower.PrimaryPart.Position, enemy.model.PrimaryPart.Position) * CFrame.new(0, 0, -distance/2)
+                    laser.Size = Vector3.new(0.5, 0.5, distance)
+                    laser.Parent = workspace
+                    task.spawn(function(laser)
+                        task.wait(.06)
+                        laser:Destroy()
+                    end, laser)
+
                     local data = towers[tower.Name]
                     waveHandler:damageEnemey(enemy, data.damage)
                     towercoolDowns[tower] = tick()
