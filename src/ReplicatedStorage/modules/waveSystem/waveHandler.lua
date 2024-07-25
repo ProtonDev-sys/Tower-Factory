@@ -113,6 +113,19 @@ function waveHandler:sendWave(waveNumber)
     end)
 end
 
+function waveHandler:damageEnemey(enemy, damage)
+    enemy.health -= damage
+    if enemy.health <= 0 then
+        for index,__enemy in next, self.enemies do
+            if __enemy == enemy then
+                enemy.model:Destroy()
+                table.remove(self.enemies, index)
+                break
+            end
+        end
+    end
+end
+
 function waveHandler:sendEnemy(enemy)
     local map = workspace.Map
     local newEnemey = deepCopy(enemies[enemy])

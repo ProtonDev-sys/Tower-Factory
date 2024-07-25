@@ -4,6 +4,8 @@ local enemies = replicatedStorage.Enemies
 local enemies = {
     ["test"] = {
         ["name"] = "Testing enemy",
+        ["maxHealth"] = 100,
+        ["maxArmor"] = 100,
         ["health"] = 100,
         ["armor"] = 100,
         ["armorDamage"] = 0.8,
@@ -11,7 +13,7 @@ local enemies = {
             return
         end,
         ["abilityTime"] = 5,
-        ["movementSpeed"] = 10,
+        ["movementSpeed"] = 2,
         ["flying"] = false,
         ["model"] = enemies.test,
         ["boss"] = false

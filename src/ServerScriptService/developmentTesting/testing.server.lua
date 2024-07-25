@@ -1,10 +1,12 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local remotes = replicatedStorage.remotes
 local development = remotes.development
 
 local modules = replicatedStorage.modules
 local pathHandler = require(modules.pathingSystem.pathHandler)
 local networkingService = require(replicatedStorage.modules.networkService.networkHandler)
+local towers = require(modules.towers.towers)
 
 local WHITELISTED_USERS = {
     4693178461
@@ -49,4 +51,27 @@ networkingService:registerEvent("RemoteEvent", "spawnEnemy", function(plr)
     waveHandler:sendWave(1)
 end)
 
+networkingService:registerEvent("RemoteEvent", "requestEnemyData", function(player, enemy)
+    for _,v in next, waveHandler.enemies do
+        if v.model == enemy then
+            networkingService:getEvent("requestEnemyData"):FireClient(player, v)
+        end
+    end
+end)
 
+
+local towercoolDowns = {}
+
+RunService.Heartbeat:Connect(function()
+    for _,tower in next, workspace.Map.Part.itemHolder:GetChildren() do
+        for _,enemy in next, waveHandler.enemies do
+            if (enemy.model.PrimaryPart.Position - tower.PrimaryPart.Position).Magnitude <= towers[tower.Name].range then
+                if (not towercoolDowns[tower]) or ((tick() - towercoolDowns[tower])*1000 > towers[tower.Name].cooldown) then
+                    local data = towers[tower.Name]
+                    waveHandler:damageEnemey(enemy, data.damage)
+                    towercoolDowns[tower] = tick()
+                end
+            end
+        end
+    end
+end)

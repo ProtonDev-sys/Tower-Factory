@@ -25,22 +25,23 @@ function network:registerEvent(type, name, callback)
             remote.OnServerInvoke = callback
         end
     else
-        error("Do not register events on the client! This will be implemented in the future.")
-        --[[
         if type == "RemoteEvent" then
-            local remote = Instance.new("RemoteEvent")
+            local remote = remotes:FindFirstChild(name)
+            if not remote then return error("Remote not found") end
+            if remote.ClassName ~= type then return error("Invalid classname") end
             remote.Parent = remotes
             self.remotes[name] = remote
 
             remote.OnClientEvent:Connect(callback)
         elseif type == "RemoteFunction" then
-            local remote = Instance.new("RemoteEvent")
+            local remote = remotes:FindFirstChild(name)
+            if not remote then return error("Remote not found") end
+            if remote.ClassName ~= type then return error("Invalid classname") end
             remote.Parent = remotes
             self.remotes[name] = remote
 
             remote.OnClientInvoke = callback
         end
-        ]]
     end
 end
 
