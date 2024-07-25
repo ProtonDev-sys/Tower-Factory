@@ -137,7 +137,7 @@ local function dfs(gridSize, currentPosition, exit, visited, path, lastDirection
     table.insert(path, currentPosition)
     
     -- Randomize the directions to ensure a random path
-    local directions = {
+    local directions = { -- these have keys so that we can utilise them to get a straighter path
         ["A"] = Vector2.new(currentPosition.X+1, currentPosition.Y),
         ["B"] = Vector2.new(currentPosition.X, currentPosition.Y-1),
         ["C"] = Vector2.new(currentPosition.X, currentPosition.Y+1),
@@ -146,6 +146,7 @@ local function dfs(gridSize, currentPosition, exit, visited, path, lastDirection
 
     directions = randomiseDict(directions)
 
+    -- If possible we want the path to be as "straight" as possible but not just a straight line hence why the chance decreases on every iteration.
     if lastDirection and math.random(1,100) <= 100-timesLastDirectionRepeated and isValidMove(gridSize, directions[lastDirection], visited) then
         local tmp = directions
         directions = {

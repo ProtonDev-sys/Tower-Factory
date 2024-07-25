@@ -34,7 +34,8 @@ end)
 
 local m = game.Players.LocalPlayer:GetMouse()
 m.Button1Down:Connect(function()
-	placement:place(game.ReplicatedStorage.remotes.placementSystem.place)
+	local remote = networkingService:getEvent("placeObject")
+	placement:place(remote)
 end)
 
 testPathButton.MouseButton1Click:Connect(function()

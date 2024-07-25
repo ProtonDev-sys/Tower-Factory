@@ -1,4 +1,6 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local modules = replicatedStorage.modules
+local networkHandler = require(modules.networkService.networkHandler)
 
 local function getBoundingBoxPart(part)
     local minVector = Vector3.new(math.huge, math.huge, math.huge)
@@ -155,4 +157,4 @@ local function place(player, id, placedObjects, cframe, plot)
     return true
 end
 
-replicatedStorage.remotes.placementSystem.place.OnServerInvoke = place
+networkHandler:registerEvent("RemoteFunction", "placeObject", place)

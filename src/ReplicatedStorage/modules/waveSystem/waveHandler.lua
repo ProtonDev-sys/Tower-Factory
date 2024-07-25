@@ -94,7 +94,7 @@ function waveHandler:sendWave(waveNumber)
                         local amount = enemyArray.amount
                         local id = enemyArray.id
                         local lastTick = startTick
-                        while amount >= 0 do
+                        while amount >= 1 do
                             local currentTick = tick() * 1000
                             if (currentTick-lastTick) >= spacing then
                                 amount -= 1
